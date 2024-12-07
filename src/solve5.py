@@ -1,7 +1,18 @@
+import copy
+
 # Load puzzle
 rules_left = {}
 rules_right = {}
 updates = []
+
+# rules_left contains list of things that the key is to the left of. IE the list
+# for a given key has the things to the right of that key. rules_right is the
+# opposite.
+
+# For example using alphabetical ordering on the set {a, b, c, d}:
+# rules_left[a] = [b, c, d]
+# rules_left[c] = [d]
+# rules_right[c] = [a, b]
 
 def check_order(update, rules_left, rules_right):
     for i, current in enumerate(update):
@@ -27,9 +38,40 @@ def check_order(update, rules_left, rules_right):
 
     return True
 
+def swap(x, i1, i2):
+    x[i1], x[i2] = x[i2], x[i1]
+    return x
+
+def find_swap_idxs(x, rules_left, rules_right):
+    for i, xx in enumerate(x):
+        try:
+            for right in rules_left[xx]:
+                if right in x:
+                    ridx = x.index(right)
+                    if i > ridx:
+                        # swap
+                        return i, ridx
+            for left in rules_right[xx]:
+                if left in x:
+                    lidx = x.index(left)
+                    if i < lidx:
+                        # swap
+                        return i, lidx
+        except:
+            pass
+    return None
+
+def dosort(line, rules_left, rules_right):
+    x = copy.deepcopy(line)
+    while True:
+        idxs = find_swap_idxs(x, rules_left, rules_right)
+        if idxs:
+            x = swap(x, idxs[0], idxs[1])
+        else:
+            return x
+
 with open("../inputs/05.txt", "r") as fid:
     nextpart = False
-    print("part 1")
     for y, line in enumerate(fid):
         if line == "\n":
             nextpart = True
@@ -49,10 +91,19 @@ with open("../inputs/05.txt", "r") as fid:
                 # Now read second part
                 updates.append([int(x) for x in line.split(',')])
 
+    # Part 1
     accum = 0
     for update in updates:
         if check_order(update, rules_left, rules_right):
-            print(update)
             middle = len(update) // 2
             accum += update[middle]
+    print(accum)
+
+    # Part 2
+    accum = 0
+    for update in updates:
+        if not check_order(update, rules_left, rules_right):
+            new_line = dosort(update, rules_left, rules_right)
+            middle = len(new_line) // 2
+            accum += new_line[middle]
     print(accum)
