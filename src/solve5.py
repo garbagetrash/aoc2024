@@ -6,28 +6,28 @@ updates = []
 def check_order(update, rules_left, rules_right):
     for i, current in enumerate(update):
         try:
-            other_right = rules_left[current]
-            try:
-                if i > update.index(other_right):
-                    return False
-            except:
-                pass
+            for right in rules_left[current]:
+                try:
+                    if i > update.index(right):
+                        return False
+                except:
+                    pass
         except KeyError:
             pass
 
         try:
-            other_left = rules_right[current]
-            try:
-                if i < update.index(other_left):
-                    return False
-            except:
-                pass
+            for left in rules_right[current]:
+                try:
+                    if i < update.index(left):
+                        return False
+                except:
+                    pass
         except KeyError:
             pass
 
     return True
 
-with open("05.txt", "r") as fid:
+with open("../inputs/05.txt", "r") as fid:
     nextpart = False
     print("part 1")
     for y, line in enumerate(fid):
@@ -37,8 +37,14 @@ with open("05.txt", "r") as fid:
             if not nextpart:
                 # Read first part
                 s = line.split('|')
-                rules_left[int(s[0])] = int(s[1])
-                rules_right[int(s[1])] = int(s[0])
+                if int(s[0]) in rules_left.keys():
+                    rules_left[int(s[0])].append(int(s[1]))
+                else:
+                    rules_left[int(s[0])] = [int(s[1])]
+                if int(s[1]) in rules_right.keys():
+                    rules_right[int(s[1])].append(int(s[0]))
+                else:
+                    rules_right[int(s[1])] = [int(s[0])]
             else:
                 # Now read second part
                 updates.append([int(x) for x in line.split(',')])
