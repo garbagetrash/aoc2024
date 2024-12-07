@@ -83,10 +83,11 @@ std::map<std::pair<int64_t, int64_t>, char> make_map(std::vector<std::string> li
     return output;
 };
 
-template <typename F>
-std::map<std::pair<int64_t, int64_t>, auto> make_map(std::vector<std::string> lines, F&& map_char_to_T)
+template <typename F, typename T=decltype(std::declval<F>()(std::declval<char>()))>
+std::map<std::pair<int64_t, int64_t>, T> make_map(std::vector<std::string> lines, F&& map_char_to_T)
 {
-    std::map<std::pair<int64_t, int64_t>, decltype(map_char_to_T(std::declval<char>()))> output = {};
+    std::map<std::pair<int64_t, int64_t>, decltype(std::declval<F>()(std::declval<char>()))>
+      output = {};
     for (int64_t y = 0; y < lines.size(); y++) {
         for (int64_t x = 0; x < lines[y].size(); x++) {
             output.insert({std::make_pair(x, y), map_char_to_T(lines[y][x])});
