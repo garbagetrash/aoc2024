@@ -32,7 +32,6 @@ std::pair<size_t, bool> simulate(M m, Point2D guardpos, Point2D guarddir)
     while (true)
     {
         auto nextpos = guardpos + guarddir;
-        //std::cout << nextpos << std::endl;
         auto nextkey = std::make_pair(nextpos.x, nextpos.y);
         if (m.count(nextkey) > 0) {
             // Still in area
@@ -63,7 +62,7 @@ std::pair<size_t, bool> simulate(M m, Point2D guardpos, Point2D guarddir)
 
 int main()
 {
-    auto lines = load("06a.txt");
+    auto lines = load("06.txt");
     auto m = make_map(lines);
 
     auto guard = map_find_first_value(m, '^').value();
@@ -75,21 +74,21 @@ int main()
     std::cout << "# visited: " << visited << std::endl;
     
     // Part 2
-    int64_t xmax = 130;
-    int64_t ymax = 130;
+    int64_t xmax = lines[0].size();
+    int64_t ymax = lines.size();
     std::atomic<size_t> cntr{0};
     std::vector<std::thread> thread_handles;
     for (int64_t x = 0; x < xmax; x++)
     {
         for (int64_t y = 0; y < ymax; y++)
         {
-            thread_handles.push_back(std::thread([m, x, y, guard, guarddir, &cntr]() {
+            thread_handles.push_back(std::thread([&m, x, y, guard, &cntr]() {
                 auto mm = m;
-                mm.insert({std::make_pair(x, y), '#'});
-                auto [visited, infbool] = simulate(mm, Point2D(guard), guarddir);
+                mm[std::make_pair(x, y)] = '#';
+                auto [visited, infbool] = simulate(mm, Point2D(guard), north);
                 if (infbool) {
-                    std::cout << "asdf" << std::endl;
                     cntr++;
+                    //cntr.fetch_add(1);
                 }
             }));
         }
