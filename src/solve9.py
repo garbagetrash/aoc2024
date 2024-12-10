@@ -48,7 +48,8 @@ def defrag(memory):
 def calc_checksum(memory):
     output = 0
     for i, m in enumerate(memory):
-        output += i*m
+        if m >= 0:
+            output += i*m
     return output
 
 
@@ -56,7 +57,9 @@ def swap2(memory, empty, file):
     for i in range(file[2]):
         memory[empty[0] + i] = memory[file[0] + i]
         memory[file[0] + i] = -1
-    return memory
+
+    newstart = empty[0] + file[2]
+    return (newstart, empty[1], empty[1] - newstart)
 
 
 def calc_empty(memory):
@@ -71,8 +74,6 @@ def calc_empty(memory):
         if start is None and m < 0:
             start = i
 
-    # flip it, first element is last empty space, last is first.
-    empty = empty[::-1]
     return empty
 
 
@@ -93,8 +94,6 @@ def calc_file(memory):
         end = len(memory)
         files.append((start, end, end - start))
 
-    # flip files around
-    files = files[::-1]
     return files
 
 
@@ -102,24 +101,22 @@ def defrag2(memory):
     empty = calc_empty(memory)
     files = calc_file(memory)
 
-    print("files: ", files)
-
     # starting with last file, walk backwards
-    for j, f in enumerate(files):
+    for f in files[::-1]:
         # recalculate and walk forwards in empty spaces...
-        empty = calc_empty(memory)
-        print("empty: ", empty)
-        for e in empty[::-1]:
-            if e[2] >= f[2]:
-                # e is large enough to accomodate f
+        for i in range(len(empty)):
+            if empty[i][0] > f[0]:
+                # Bail after we're looking at empty spaces past our files
+                break
+            if empty[i][2] >= f[2]:
+                # empty[i] is large enough to accomodate f
                 # do swap
-                print(j, "large enough")
-                memory = swap2(memory, e, f)
+                empty[i] = swap2(memory, empty[i], f)
                 break
 
     return truncate(memory)
 
-with open("../inputs/09a.txt", "r") as fid:
+with open("../inputs/09.txt", "r") as fid:
     inputs = fid.read()
     memory = -np.ones(len(inputs) * 10, dtype=int)
 
@@ -140,18 +137,14 @@ with open("../inputs/09a.txt", "r") as fid:
         isfile ^= 1
 
     memory_og = truncate(memory)
-    print_memory(memory_og)
 
     # Part 1
     mem1 = copy.deepcopy(memory_og)
     memory = defrag(mem1)
-    print_memory(memory)
     print(calc_checksum(memory))
 
 
     # Part 2
     mem2 = copy.deepcopy(memory_og)
-    print_memory(mem2)
     memory = defrag2(mem2)
-    print_memory(memory)
     print(calc_checksum(memory))
