@@ -17,6 +17,17 @@ def apply(l):
     return new
 
 
+def memoize_last_n_steps(n, m):
+    try:
+        return len(cache[(n, m)])
+    except:
+        l = [n]
+        for _ in range(m):
+            l = apply(l)
+        cache[(n, m)] = l
+        return len(l)
+
+
 def memoize_n_steps(n, m):
     try:
         return cache[(n, m)]
@@ -29,18 +40,24 @@ def memoize_n_steps(n, m):
 
 
 def solvepart2(l):
-    nsteps = 15
+    nsteps = 5
     mm = copy.deepcopy(l)
-    for i in range(int(75/nsteps)):
+    for i in range(8):
         new = []
         print(nsteps*i)
         for c in mm:
             new += memoize_n_steps(c, nsteps)
         mm = new
-    return mm
+
+    # mm has taken 40 steps, now get counts for 35 steps and sum
+    accum = 0
+    for i, c in enumerate(mm):
+        print(f"{i}/{len(mm)}", end="\r", flush=True)
+        accum += memoize_last_n_steps(c, 35)
+    return accum
 
 
-with open("../inputs/11a.txt", "r") as fid:
+with open("../inputs/11.txt", "r") as fid:
     m = []
     for n in fid.read().split():
         m.append(int(n))
@@ -58,6 +75,4 @@ with open("../inputs/11a.txt", "r") as fid:
     print(memoize_n_steps(m[1], 5))
 
     # Part 2
-    cnt = 0
-    mm = solvepart2(m)
-    print(len(mm))
+    print(solvepart2(m))
