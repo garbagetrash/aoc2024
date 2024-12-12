@@ -45,22 +45,27 @@ def count_perimeter(region, m):
     perimeter = 0
     rtype = m[list(region)[0]]
     for p in region:
-        # TODO: need to count fences on outer border, get_neighbors won't return outer edges
-        for n in get_neighbors(p, m):
-            if m[n] != rtype:
+        candidates = [tuple(np.array(p, dtype=int) + d) for d in [north, east, south, west]]
+        for n in candidates:
+            try:
+                if m[n] != rtype:
+                    perimeter += 1
+            except KeyError:
                 perimeter += 1
     return perimeter
 
 
-with open("../inputs/12a.txt", "r") as fid:
+with open("../inputs/12.txt", "r") as fid:
     m = {}
     xmax = 0
     ymax = 0
     for y, line in enumerate(fid):
         ymax += 1
-        xmax = len(line)
+        xmax = len(line) - 1
         for x, c in enumerate(line):
             m[(x, y)] = c
+
+    print(xmax, ymax)
 
     # Part 1
     accum = 0
@@ -71,7 +76,7 @@ with open("../inputs/12a.txt", "r") as fid:
                 region = get_connected((x, y), m)
                 perimeter = count_perimeter(region, m)
                 accum += len(region) * perimeter
-                print((x, y), len(region))
+                print((x, y), len(region), perimeter)
                 explored1.update(region)
     print(accum)
 
