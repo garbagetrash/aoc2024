@@ -92,9 +92,8 @@ with open("../inputs/06.txt", "r") as fid:
 
     # Part 2
     accum = 0
-    for x in range(xmax):
-        for y in range(ymax):
-            if simulate((x, y), m, guard_init, north):
-                print(x, y)
-                accum += 1
+    for (x, y) in visited:
+        if simulate((x, y), m, guard_init, north):
+            print(x, y)
+            accum += 1
     print(accum)
