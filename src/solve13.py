@@ -6,6 +6,9 @@ def solve1(machine):
     # A button casts 3, B button costs 1
     a, b, prize = machine
 
+    da = a[1] / a[0]
+    db = b[1] / b[0]
+
     cost = 0
     while prize[0] > 0 and prize[1] > 0:
         if prize[0] % b[0] == 0 and prize[1] % b[1] == 0 and prize[0] / b[0] == prize[1] / b[1]:
@@ -52,5 +55,9 @@ with open("../inputs/13.txt", "r") as fid:
     for machine in machines:
         a, b, prize = machine
         prize = (prize[0] + 10000000000000, prize[1] + 10000000000000)
-        print(prize)
+        machine = (machine[0], machine[1], prize)
+        cost = solve1(machine)
+        print(machine, cost)
+        if cost:
+            accum += cost
     print(accum)
