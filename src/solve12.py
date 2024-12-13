@@ -114,10 +114,10 @@ def count_perimeter2(region, m, xmax, ymax):
     vedges = list(vedges)
     hedges.sort()
     vedges.sort()
-    print(f"Horiz. Edges: {hedges}")
-    print(f"Vert. Edges : {vedges}")
-    print_hedges(hedges, xmax, ymax)
-    print_vedges(hedges, xmax, ymax)
+    #print(f"Horiz. Edges: {hedges}")
+    #print(f"Vert. Edges : {vedges}")
+    #print_hedges(hedges, xmax, ymax)
+    #print_vedges(hedges, xmax, ymax)
 
     # Walk down rows
     nsides = 0
@@ -126,11 +126,22 @@ def count_perimeter2(region, m, xmax, ymax):
         for x in range(-1, xmax):
             p = (x, y)
             if p in hedges and p not in seen:
+                if p in region:
+                    ptype = True
+                else:
+                    ptype = False
                 seen.add(p)
                 nsides += 1
                 for xx in range(x + 1, xmax):
                     p2 = (xx, y)
                     if p2 in hedges:
+                        if p2 in region:
+                            p2type = True
+                        else:
+                            p2type = False
+                        if ptype != p2type:
+                            nsides += 1
+                            ptype = p2type
                         seen.add(p2)
                     else:
                         # This indicates end of fence side
@@ -142,11 +153,22 @@ def count_perimeter2(region, m, xmax, ymax):
         for y in range(-1, ymax):
             p = (x, y)
             if p in vedges and p not in seen:
-                nsides += 1
+                if p in region:
+                    ptype = True
+                else:
+                    ptype = False
                 seen.add(p)
+                nsides += 1
                 for yy in range(y + 1, ymax):
                     p2 = (x, yy)
                     if p2 in vedges:
+                        if p2 in region:
+                            p2type = True
+                        else:
+                            p2type = False
+                        if ptype != p2type:
+                            nsides += 1
+                            ptype = p2type
                         seen.add(p2)
                     else:
                         # This indicates end of fence side
@@ -155,7 +177,7 @@ def count_perimeter2(region, m, xmax, ymax):
     return nsides
 
 
-with open("../inputs/12a.txt", "r") as fid:
+with open("../inputs/12.txt", "r") as fid:
     m = {}
     xmax = 0
     ymax = 0
@@ -189,6 +211,6 @@ with open("../inputs/12a.txt", "r") as fid:
                 region = get_connected((x, y), m)
                 perimeter = count_perimeter2(region, m, xmax, ymax)
                 accum += len(region) * perimeter
-                print((x, y), len(region), perimeter)
+                #print((x, y), len(region), perimeter)
                 explored2.update(region)
     print(accum)
