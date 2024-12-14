@@ -55,12 +55,13 @@ def print_states(states, width, height):
 
 def find_min_var(states, width, height):
     vararr = []
-    for i in range(10000):
+    offset = 6000
+    for i in range(offset, offset + 1000):
         tmp = copy.deepcopy(states)
         tmp = prop_all(tmp, i, width, height)
         vararr.append(calc_var(tmp))
 
-    minidx = np.argmin(vararr)
+    minidx = offset + np.argmin(vararr)
     print_states(prop_all(states, minidx, width, height), width, height)
     print(minidx)
 
