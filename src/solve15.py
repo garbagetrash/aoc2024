@@ -68,7 +68,17 @@ def print_map(m):
         print()
     print()
 
-with open("../inputs/15a.txt", "r") as fid:
+
+def calc_boxes(m):
+    output = 0
+    for y, row in enumerate(m):
+        for x, c in enumerate(row):
+            if c == 'O':
+                output += 100*y + x
+    return output
+
+
+with open("../inputs/15.txt", "r") as fid:
     mapmode = True
     m = []
     instructions = []
@@ -99,9 +109,7 @@ with open("../inputs/15a.txt", "r") as fid:
     accum = 0
     for i in instructions:
         pos = move(pos, i, m)
-        print_map(m)
-        time.sleep(0.5)
-    print(accum)
+    print(calc_boxes(m))
 
     # Part 2
     accum = 0
