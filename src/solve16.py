@@ -37,31 +37,48 @@ def get_neighbors(p, m):
     return output
 
 
+"""
+Idea:
+    Create structure (tuple?) that has (score, dir, path). After each path
+    update, do a .sort() by the score. Then we'll naturally explore the lowest
+    score paths first and should find our solution quickly at which point we
+    just bail instead of exploring all paths possible.
+"""
+
+class Path:
+    def __init__(self, path):
+        self.path = path
+        self.score = self.score()
+
+    def score(self):
+        return path_score(self.path)
+
+
 def path_to_finish(start, end, m):
     paths = []
-    paths.append([start])
+    paths.append(Path([start]))
     output_paths = []
     while len(paths) > 0:
-        for path in paths:
-            #print(f"path: {path}")
-            if type(path) != list:
-                raise ValueError("This should be a tuple")
-            frontier = set()
-            for n in get_neighbors(path[-1], m):
-                # Never optimal for a given path to retread ground
-                if n not in path:
-                    # New point
-                    if m[n] == 'E':
-                        # If win, record it and allow path to be culled
-                        output_paths.append(path + [n])
-                    else:
-                        frontier.add(n)
-            for newpoint in frontier:
-                # This should only iterate through new non-winning steps
-                paths.append(path + [newpoint])
+        path = paths[0]
+        frontier = []
+        for n in get_neighbors(path.path[-1], m):
+            # Never optimal for a given path to retread ground
+            if n not in path.path:
+                # New point
+                if m[n] == 'E':
+                    # If win, record it and allow path to be culled
+                    return path.path + [n]
+                else:
+                    frontier.append(n)
+        for newpoint in frontier:
+            # This should only iterate through new non-winning steps
+            paths.append(Path(path.path + [newpoint]))
 
-            # Don't revisit this path
-            paths.remove(path)
+        # Don't revisit this path
+        paths.remove(path)
+
+        # Sort paths by score so we explore promising routes first
+        paths = sorted(paths, key=lambda path: path.score)
 
     return output_paths
 
@@ -81,6 +98,7 @@ def path_score(path):
             direction = newdir
         score += 1
     return score
+
 
 with open("../inputs/16.txt", "r") as fid:
     m = {}
@@ -103,16 +121,17 @@ with open("../inputs/16.txt", "r") as fid:
     print_map(m, xmax, ymax)
 
     # Part 1
-    paths = path_to_finish(start, end, m)
+    path = path_to_finish(start, end, m)
+    """
     scores = [path_score(path) for path in paths]
-
     for i in range(len(paths)):
         print(f"i: {i}")
         print(f"score: {scores[i]}")
         print_path(m, paths[i], xmax, ymax)
 
     minidx = np.argmin(scores)
-    print(f"Part 1: {scores[minidx]}")
+    """
+    print(f"Part 1: {path_score(path)}")
 
     # Part 2
     accum = 0
