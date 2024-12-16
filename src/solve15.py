@@ -69,13 +69,185 @@ def print_map(m):
     print()
 
 
+def print_moving(moving, m):
+    for y, row in enumerate(m):
+        for x, c in enumerate(row):
+            if (x, y) in moving:
+                print("X", end="")
+            else:
+                print(f"{c}", end="")
+        print()
+    print()
+
+
 def calc_boxes(m):
     output = 0
     for y, row in enumerate(m):
         for x, c in enumerate(row):
-            if c == 'O':
+            if c == 'O' or c == '[':
                 output += 100*y + x
     return output
+
+
+# Recursive check if movement possible
+def can_move(pos, direction, m):
+    nn = np.array(pos) + np.array(direction)
+    ymax, xmax = m.shape
+
+    # In bounds checks
+    if nn[0] < 0 or nn[0] >= xmax:
+        # Out of bounds
+        return None
+    if nn[1] < 0 or nn[1] >= ymax:
+        # Out of bounds
+        return None
+
+    moving = []
+    if m[nn[1], nn[0]] == '.':
+        return moving
+    elif m[nn[1], nn[0]] == '#':
+        return None 
+    elif m[nn[1], nn[0]] == '[':
+        moving.append(tuple(nn))
+        moving.append(tuple(nn + east))
+
+        # A box - left side
+        if direction is east or direction is west:
+            newboxes = can_move(nn, direction, m)
+            if newboxes is not None:
+                moving += newboxes
+                return moving
+            else:
+                return None
+        else:
+            # 2x as wide
+            newboxes_l = can_move(nn, direction, m)
+            newboxes_r = can_move(nn + east, direction, m)
+            if newboxes_l is not None and newboxes_r is not None:
+                moving += newboxes_l
+                moving += newboxes_r
+                return moving
+            else:
+                return None
+
+    elif m[nn[1], nn[0]] == ']':
+        moving.append(tuple(nn))
+        moving.append(tuple(nn + west))
+
+        # A box - right side
+        if direction is east or direction is west:
+            newboxes = can_move(nn, direction, m)
+            if newboxes is not None:
+                moving += newboxes
+                return moving
+            else:
+                return None
+        else:
+            # 2x as wide
+            newboxes_l = can_move(nn, direction, m)
+            newboxes_r = can_move(nn + west, direction, m)
+            if newboxes_l is not None and newboxes_r is not None:
+                moving += newboxes_l
+                moving += newboxes_r
+                return moving
+            else:
+                return None
+
+
+def move_boxes(pos, direction, m):
+    nn = np.array(pos) + np.array(direction)
+
+    if m[pos[1], pos[0]] == '[':
+        if direction is east:
+            nnn = np.array(pos) + 2*east
+            if m[nnn[1], nnn[0]] != '.':
+                move_boxes(nnn, direction, m)
+            m[nnn[1], nnn[0]] = ']'
+            m[nn[1], nn[0]] = '['
+            m[pos[1], pos[0]] = '.'
+        else:
+            # North or South
+            nn_l = nn
+            nn_r = nn + east
+            if m[nn_l[1], nn_l[0]] != '.':
+                move_boxes(nn_l, direction, m)
+            m[nn_l[1], nn_l[0]] = '['
+            m[pos[1], pos[0]] = '.'
+            if m[nn_r[1], nn_r[0]] != '.':
+                move_boxes(nn_r, direction, m)
+            m[nn_r[1], nn_r[0]] = ']'
+            m[pos[1], pos[0] + 1] = '.'
+
+    elif m[pos[1], pos[0]] == ']':
+        if direction is west:
+            nnn = np.array(pos) + 2*west
+            if m[nnn[1], nnn[0]] != '.':
+                move_boxes(nnn, direction, m)
+            m[nnn[1], nnn[0]] = '['
+            m[nn[1], nn[0]] = ']'
+            m[pos[1], pos[0]] = '.'
+        else:
+            # North or South
+            nn_l = nn + west
+            nn_r = nn
+            if m[nn_r[1], nn_r[0]] != '.':
+                move_boxes(nn_r, direction, m)
+            m[nn_r[1], nn_r[0]] = ']'
+            m[pos[1], pos[0]] = '.'
+            if m[nn_l[1], nn_l[0]] != '.':
+                move_boxes(nn_l, direction, m)
+            m[nn_l[1], nn_l[0]] = '['
+            m[pos[1], pos[0] - 1] = '.'
+
+
+def move2(pos, d, m):
+    if d == '^':
+        d = north
+    elif d == '>':
+        d = east
+    elif d == 'v':
+        d = south
+    elif d == '<':
+        d = west
+    else:
+        raise ValueError("Invalid direction")
+
+    nn = np.array(pos) + d
+
+    boxes_moving = can_move(pos, d, m)
+    if boxes_moving is not None:
+        # Move the robot and boxes
+        move_boxes(nn, d, m)
+
+        m[nn[1], nn[0]] = '@'
+        m[pos[1], pos[0]] = '.'
+
+        # Return where we moved bot to
+        return nn
+    else:
+        # If we can't move, then just return current position
+        return pos
+
+
+def doubleit(m):
+    output = []
+    for row in m:
+        newrow = []
+        for c in row:
+            if c == '.':
+                newrow.append('.')
+                newrow.append('.')
+            elif c == '#':
+                newrow.append('#')
+                newrow.append('#')
+            elif c == 'O':
+                newrow.append('[')
+                newrow.append(']')
+            elif c == '@':
+                newrow.append('@')
+                newrow.append('.')
+        output.append(newrow)
+    return np.array(output)
 
 
 with open("../inputs/15.txt", "r") as fid:
@@ -97,20 +269,23 @@ with open("../inputs/15.txt", "r") as fid:
         else:
             for c in line.strip():
                 instructions.append(c)
-    m = np.array(m)
-    ymax, xmax = m.shape
-    print(m)
-    print(xmax, ymax)
-    print(pos)
-    print(instructions)
-    print_map(m)
+
+    mm = np.array(copy.deepcopy(m))
+    ymax, xmax = mm.shape
 
     # Part 1
     accum = 0
+    p = copy.deepcopy(pos)
     for i in instructions:
-        pos = move(pos, i, m)
-    print(calc_boxes(m))
+        p = move(p, i, mm)
+    print(calc_boxes(mm))
 
     # Part 2
+    mm = doubleit(m)
+    p = np.array([2*pos[0], pos[1]])
+    print_map(mm)
     accum = 0
-    print(accum)
+    for i in instructions:
+        p = move2(p, i, mm)
+        #print_map(mm)
+    print(calc_boxes(mm))
