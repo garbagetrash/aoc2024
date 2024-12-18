@@ -46,19 +46,34 @@ Idea:
 """
 
 class Path:
-    def __init__(self, path):
+    def __init__(self, path, end):
         self.path = path
-        self.score = self.score()
+        self.end = end
+        self.score = self._score()
 
-    def score(self):
+    def _score(self):
         return path_score(self.path)
 
 
 def path_to_finish(start, end, m):
     paths = []
-    paths.append(Path([start]))
+    paths.append(Path([start], end))
     output_paths = []
+    winning_score = None
     while len(paths) > 0:
+        if winning_score is not None:
+            all_greater = True
+            for p in paths:
+                #print(f"p.score: {p.score}")
+                if p.score < winning_score:
+                    # keep going
+                    all_greater = False
+
+            #print()
+            if all_greater:
+                # If we get here then all must be > winning_score
+                return output_paths
+
         path = paths[0]
         frontier = []
         for n in get_neighbors(path.path[-1], m):
@@ -67,12 +82,28 @@ def path_to_finish(start, end, m):
                 # New point
                 if m[n] == 'E':
                     # If win, record it and allow path to be culled
-                    return path.path + [n]
+                    winner = Path(path.path + [n], end)
+                    output_paths.append(path.path + [n])
+                    if winning_score is None:
+                        winning_score = winner.score
                 else:
                     frontier.append(n)
         for newpoint in frontier:
             # This should only iterate through new non-winning steps
-            paths.append(Path(path.path + [newpoint]))
+            newpath = Path(path.path + [newpoint], end)
+            ends = [p.path[-1] for p in paths]
+            if newpoint in ends:
+                for oldpath in paths:
+                    if oldpath.path[-1] == newpath.path[-1]:
+                        # Cull all paths that end in the same place
+                        if oldpath.score > newpath.score:
+                            paths.remove(oldpath)
+                            paths.append(newpath)
+                        elif oldpath.score == newpath.score:
+                            paths.append(newpath)
+                            break
+            else:
+                paths.append(newpath)
 
         # Don't revisit this path
         paths.remove(path)
@@ -121,7 +152,7 @@ with open("../inputs/16.txt", "r") as fid:
     print_map(m, xmax, ymax)
 
     # Part 1
-    path = path_to_finish(start, end, m)
+    paths = path_to_finish(start, end, m)
     """
     scores = [path_score(path) for path in paths]
     for i in range(len(paths)):
@@ -131,8 +162,10 @@ with open("../inputs/16.txt", "r") as fid:
 
     minidx = np.argmin(scores)
     """
-    print(f"Part 1: {path_score(path)}")
+    print(f"Part 1: {path_score(paths[0])}")
 
     # Part 2
-    accum = 0
-    print(0)
+    accum = set()
+    for path in paths:
+        accum.update(path)
+    print(len(accum))
