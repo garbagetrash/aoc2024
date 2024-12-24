@@ -25,7 +25,7 @@ def shortest_path(p1, p2, m):
         del frontier[0]
 
 
-with open("18.txt", "r") as fid:
+with open("../inputs/18.txt", "r") as fid:
     coords = []
     maxval = 0
     for i, line in enumerate(fid):
